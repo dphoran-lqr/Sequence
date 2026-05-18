@@ -2,21 +2,18 @@
   "name": "Sequence Board",
   "short_name": "Sequence",
   "description": "Digital chip tracker for the Sequence card game",
-  "start_url": ".",
+  "start_url": "/Sequence/",
+  "scope": "/Sequence/",
   "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#071a0f",
   "theme_color": "#071a0f",
   "icons": [
     {
-      "src": "https://via.placeholder.com/192x192/071a0f/f59e0b?text=S",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "https://via.placeholder.com/512x512/071a0f/f59e0b?text=S",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }

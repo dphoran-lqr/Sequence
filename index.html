@@ -24,8 +24,6 @@
   <script type="text/babel" data-type="module">
     const { useState } = React;
 
-    // Official Jax Sequence board — read from physical board photo.
-    // Key: T=10, Q=Queen, K=King, A=Ace  |  S=♠ H=♥ D=♦ C=♣
     const BOARD = [
       ["FREE","6D","7D","8D","9D","TD","QD","KD","AD","FREE"],
       ["5D","3H","2S","2C","3S","4S","5S","6S","7S","AC"],
@@ -39,10 +37,12 @@
       ["FREE","9S","8S","7S","6S","5S","4S","3S","2S","FREE"],
     ];
 
-    const SYM = { S:"♠", H:"♥", D:"♦", C:"♣" };
-    const RED = { H:true, D:true, S:false, C:false };
+    const SYM  = { S:"♠", H:"♥", D:"♦", C:"♣" };
+    const RED  = { H:true, D:true, S:false, C:false };
+    const FACE = { Q:true, K:true, A:true };
+
     const TEAMS = {
-      team1:{ color:"#2563eb", glow:"#3b82f6", light:"#bfdbfe", name:"Blue" },
+      team1:{ color:"#2563eb", glow:"#3b82f6", light:"#bfdbfe", name:"Blue"  },
       team2:{ color:"#16a34a", glow:"#22c55e", light:"#bbf7d0", name:"Green" },
     };
 
@@ -55,7 +55,7 @@
         for(let r=0;r<10;r++) for(let c=0;c<10;c++) for(const [dr,dc] of DIRS){
           const cells=[];
           for(let i=0;i<5;i++){
-            const nr=r+dr*i,nc=c+dc*i;
+            const nr=r+dr*i, nc=c+dc*i;
             if(nr<0||nr>9||nc<0||nc>9){cells.length=0;break;}
             if(BOARD[nr][nc]==="FREE"||chips[nr][nc]===team) cells.push([nr,nc]);
             else{cells.length=0;break;}
@@ -71,46 +71,63 @@
     }
 
     function App(){
-      const [screen,setScreen]=useState("setup");
-      const [numP,setNumP]=useState(2);
-      const [chips,setChips]=useState(()=>Array.from({length:10},()=>Array(10).fill(null)));
-      const [curP,setCurP]=useState(0);
-      const [mode,setMode]=useState("normal");
-      const [seqs,setSeqs]=useState([]);
-      const [winner,setWinner]=useState(null);
+      const [screen,  setScreen]  = useState("setup");
+      const [numP,    setNumP]    = useState(2);
+      const [chips,   setChips]   = useState(()=>Array.from({length:10},()=>Array(10).fill(null)));
+      const [curP,    setCurP]    = useState(0);
+      const [fixMode, setFixMode] = useState(false);
+      const [seqs,    setSeqs]    = useState([]);
+      const [winner,  setWinner]  = useState(null);
 
-      const pList=numP===2
+      const pList = numP===2
         ?[{team:"team1",name:"Player 1"},{team:"team2",name:"Player 2"}]
         :[{team:"team1",name:"P1"},{team:"team2",name:"P2"},{team:"team1",name:"P3"},{team:"team2",name:"P4"}];
 
-      const curTeam=pList[curP].team;
-      const curName=pList[curP].name;
-      const T=TEAMS[curTeam];
+      const curTeam = pList[curP].team;
+      const curName = pList[curP].name;
+      const T       = TEAMS[curTeam];
 
-      const lockedSet=new Set(seqs.flatMap(s=>s.cells.map(([r,c])=>`${r},${c}`)));
-      const locked=(r,c)=>lockedSet.has(`${r},${c}`);
+      const lockedSet = new Set(seqs.flatMap(s=>s.cells.map(([r,c])=>`${r},${c}`)));
+      const isLocked  = (r,c)=>lockedSet.has(`${r},${c}`);
 
       const tap=(r,c)=>{
         if(winner||BOARD[r][c]==="FREE") return;
-        const chip=chips[r][c],lk=locked(r,c);
-        let changed=false,advance=false;
+        const chip=chips[r][c], lk=isLocked(r,c);
         const next=chips.map(row=>[...row]);
-        if(mode==="oneEye"){if(chip&&chip!==curTeam&&!lk){next[r][c]=null;changed=true;advance=true;}}
-        else if(mode==="fix"){if(chip===curTeam&&!lk){next[r][c]=null;changed=true;}}
-        else{if(!chip){next[r][c]=curTeam;changed=true;advance=true;}}
+        let changed=false, advance=false;
+
+        if(fixMode){
+          // Fix mode: remove own chip only, no turn advance
+          if(chip===curTeam&&!lk){ next[r][c]=null; changed=true; }
+        } else {
+          if(!chip){
+            // Empty space → place chip
+            next[r][c]=curTeam; changed=true; advance=true;
+          } else if(chip!==curTeam&&!lk){
+            // Opponent chip (not locked) → remove it (1-eye jack logic)
+            next[r][c]=null; changed=true; advance=true;
+          }
+          // Own chip or locked → do nothing
+        }
+
         if(!changed) return;
         setChips(next);
         const ns=findSeqs(next);
         setSeqs(ns);
-        const t1=ns.filter(s=>s.team==="team1").length,t2=ns.filter(s=>s.team==="team2").length;
+        const t1=ns.filter(s=>s.team==="team1").length;
+        const t2=ns.filter(s=>s.team==="team2").length;
         const w=t1>=2?"team1":t2>=2?"team2":null;
         if(w) setWinner(w);
         if(advance&&!w) setCurP(p=>(p+1)%pList.length);
-        setMode("normal");
+        if(advance) setFixMode(false);
       };
 
-      const reset=()=>{setChips(Array.from({length:10},()=>Array(10).fill(null)));setCurP(0);setMode("normal");setSeqs([]);setWinner(null);};
+      const reset=()=>{
+        setChips(Array.from({length:10},()=>Array(10).fill(null)));
+        setCurP(0); setFixMode(false); setSeqs([]); setWinner(null);
+      };
 
+      // ── SETUP ──────────────────────────────────────────────────────────────
       if(screen==="setup") return (
         <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#071a0f 0%,#0d2c1a 60%,#071a0f 100%)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Georgia',serif"}}>
           <div style={{background:"rgba(255,255,255,0.04)",backdropFilter:"blur(12px)",border:"1px solid rgba(255,255,255,0.10)",borderRadius:24,padding:"44px 36px",textAlign:"center",maxWidth:480,width:"90%"}}>
@@ -137,19 +154,14 @@
         </div>
       );
 
-      // Board is landscape cards: 7:5 aspect per cell (like a real card rotated 90°).
-      // Height-constrained; width = height × 7/5.
-      // Each cell shows rotated corner pips on left/right edges so both players
-      // (sitting on opposite long sides of the tablet) can read their side.
-      const boardH = "calc(100dvh - 98px)";
-      const boardW = "calc((100dvh - 98px) * 7 / 5)";
-
+      // ── GAME ───────────────────────────────────────────────────────────────
       return (
         <div style={{height:"100dvh",background:"#071a0f",display:"flex",flexDirection:"column",alignItems:"center",padding:"3px 4px 2px",boxSizing:"border-box",fontFamily:"'Georgia',serif",overflow:"hidden"}}>
 
           {/* HEADER */}
           <div style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,marginBottom:3,flexShrink:0}}>
             <button onClick={()=>setScreen("setup")} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",color:"#64748b",padding:"4px 10px",borderRadius:8,cursor:"pointer",fontSize:11}}>← Setup</button>
+
             {!winner?(
               <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(0,0,0,0.45)",padding:"4px 16px",borderRadius:24,border:`1.5px solid ${T.color}45`}}>
                 <div style={{width:10,height:10,borderRadius:"50%",background:T.color,boxShadow:`0 0 8px ${T.glow}`}}/>
@@ -162,6 +174,7 @@
                 <button onClick={reset} style={{marginLeft:6,background:"rgba(0,0,0,0.25)",border:"none",color:"#fff",padding:"3px 10px",borderRadius:6,cursor:"pointer",fontSize:11}}>New Game</button>
               </div>
             )}
+
             <div style={{display:"flex",gap:6,alignItems:"center"}}>
               {["team1","team2"].map(t=>(
                 <div key={t} style={{display:"flex",alignItems:"center",gap:4,background:"rgba(0,0,0,0.35)",padding:"3px 10px",borderRadius:12}}>
@@ -173,7 +186,7 @@
             </div>
           </div>
 
-          {/* BOARD — landscape cells, rotated card faces */}
+          {/* BOARD */}
           <div style={{
             display:"grid",
             gridTemplateColumns:"repeat(10,1fr)",
@@ -183,62 +196,83 @@
             border:"3px solid #0a3319",
             borderRadius:6,
             padding:3,
-            height:boardH,
-            width:boardW,
+            height:"calc(100dvh - 98px)",
+            width:"calc((100dvh - 98px) * 7 / 5)",
+            maxWidth:"calc(100vw - 8px)",
             boxSizing:"border-box",
             flexShrink:0,
           }}>
             {BOARD.map((row,r)=>row.map((card,c)=>{
-              const chip=chips[r][c], lk=locked(r,c);
+              const chip=chips[r][c], lk=isLocked(r,c);
               const p=parse(card), isFree=card==="FREE";
               const isRed=p&&RED[p.suit];
+              const isFaceCard=p&&FACE[p.val];
               const seqCell=seqs.find(s=>s.cells.some(([sr,sc])=>sr===r&&sc===c));
-              const removable=mode==="oneEye"&&chip&&chip!==curTeam&&!lk;
-              const fixable=mode==="fix"&&chip===curTeam&&!lk;
-              const tappable=removable||fixable||(mode!=="oneEye"&&mode!=="fix"&&!chip&&!isFree);
+
+              // Tap highlighting
+              const canRemove=!fixMode&&chip&&chip!==curTeam&&!lk;
+              const canFix=fixMode&&chip===curTeam&&!lk;
+              const canPlace=!fixMode&&!chip&&!isFree;
 
               let bg="#faf7ef";
               if(isFree) bg="#fef9ec";
+              if(isFaceCard&&!isFree) bg=isRed?"#fff5f5":"#f5f5ff";
               if(lk&&seqCell) bg=`${TEAMS[seqCell.team].light}70`;
-              let bdr="1px solid #ccc5a0";
-              if(lk)       bdr="2px solid #f59e0b";
-              if(removable) bdr="2.5px solid #ef4444";
-              if(fixable)   bdr=`2.5px solid ${T.color}`;
 
+              let bdr="1px solid #ccc5a0";
+              if(isFaceCard&&!lk) bdr=`1.5px solid ${isRed?"#f8a0a0":"#a0a8f8"}`;
+              if(lk)        bdr="2px solid #f59e0b";
+              if(canRemove) bdr="2.5px solid #ef4444";
+              if(canFix)    bdr=`2.5px solid ${T.color}`;
+
+              const tappable=canPlace||canRemove||canFix;
               const txtColor=isRed?"#dc2626":"#1e293b";
-              const pipSize="clamp(7px,1.6vmin,14px)";
+              const pipSize="clamp(7px,1.5vmin,13px)";
 
               return (
                 <div key={`${r}-${c}`} onClick={()=>tap(r,c)} style={{
-                  background:bg,borderRadius:3,border:bdr,
+                  background:bg, borderRadius:3, border:bdr,
                   cursor:tappable?"pointer":"default",
-                  position:"relative",display:"flex",
-                  alignItems:"center",justifyContent:"center",
-                  overflow:"hidden",userSelect:"none",
-                  WebkitUserSelect:"none",WebkitTapHighlightColor:"transparent",
+                  position:"relative", display:"flex",
+                  alignItems:"center", justifyContent:"center",
+                  overflow:"hidden", userSelect:"none",
+                  WebkitUserSelect:"none", WebkitTapHighlightColor:"transparent",
                 }}>
 
                   {isFree ? (
-                    <span style={{fontSize:"clamp(10px,2.5vmin,22px)",color:"#b45309",lineHeight:1}}>✦</span>
+                    <span style={{fontSize:"clamp(10px,2.5vmin,22px)",color:"#b45309",lineHeight:1,transform:"rotate(-90deg)"}}>✦</span>
                   ) : (
                     <>
-                      {/* Left pip — rotate -90°; bottom player tilts head left to read */}
+                      {/* Face card inner border accent */}
+                      {isFaceCard&&(
+                        <div style={{
+                          position:"absolute",inset:2,borderRadius:2,
+                          border:`1px solid ${isRed?"rgba(220,100,100,0.35)":"rgba(100,100,200,0.35)"}`,
+                          pointerEvents:"none",
+                        }}/>
+                      )}
+
+                      {/* Left pip (reads from bottom player — tilt head left) */}
                       <span style={{
-                        position:"absolute",left:3,top:"50%",
+                        position:"absolute",left:2,top:"50%",
                         transform:"translateY(-50%) rotate(-90deg)",
                         fontSize:pipSize,fontWeight:"bold",lineHeight:1,
                         color:txtColor,whiteSpace:"nowrap",
                       }}>{dv(p.val)}{SYM[p.suit]}</span>
 
-                      {/* Center suit — large, unrotated for quick recognition */}
+                      {/* Center suit — rotated so top points LEFT */}
                       <span style={{
-                        fontSize:"clamp(14px,3.2vmin,28px)",lineHeight:1,
+                        fontSize:isFaceCard?"clamp(16px,3.5vmin,30px)":"clamp(14px,3.0vmin,26px)",
+                        lineHeight:1,
                         color:txtColor,
+                        transform:"rotate(-90deg)",
+                        display:"block",
+                        fontWeight:isFaceCard?"bold":"normal",
                       }}>{SYM[p.suit]}</span>
 
-                      {/* Right pip — rotate +90°; top player tilts head right to read */}
+                      {/* Right pip (reads from top player — tilt head right) */}
                       <span style={{
-                        position:"absolute",right:3,top:"50%",
+                        position:"absolute",right:2,top:"50%",
                         transform:"translateY(-50%) rotate(90deg)",
                         fontSize:pipSize,fontWeight:"bold",lineHeight:1,
                         color:txtColor,whiteSpace:"nowrap",
@@ -246,7 +280,7 @@
                     </>
                   )}
 
-                  {/* Chip — circular, sized from cell height */}
+                  {/* Chip */}
                   {chip&&(
                     <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
                       <div style={{
@@ -261,42 +295,35 @@
                     </div>
                   )}
 
-                  {/* Hover tint */}
-                  {!chip&&!isFree&&(
-                    <div style={{position:"absolute",inset:0,background:`${T.color}16`,borderRadius:2,pointerEvents:"none"}}/>
+                  {/* Hover tint on placeable cells */}
+                  {canPlace&&(
+                    <div style={{position:"absolute",inset:0,background:`${T.color}18`,borderRadius:2,pointerEvents:"none"}}/>
+                  )}
+                  {/* Red tint on removable enemy chips */}
+                  {canRemove&&(
+                    <div style={{position:"absolute",inset:0,background:"rgba(239,68,68,0.15)",borderRadius:2,pointerEvents:"none"}}/>
                   )}
                 </div>
               );
             }))}
           </div>
 
-          {/* ACTIONS */}
-          <div style={{display:"flex",gap:8,marginTop:4,flexShrink:0,alignItems:"center",justifyContent:"center",flexWrap:"wrap"}}>
-            <span style={{color:"rgba(255,255,255,0.3)",fontSize:10}}>PLAY:</span>
-            {[
-              {key:"twoEye",label:"2-Eye Jack",sub:"Place anywhere",em:"🃏"},
-              {key:"oneEye",label:"1-Eye Jack",sub:"Remove enemy",em:"✂️"},
-              {key:"fix",   label:"Fix Chip",  sub:"Remove own",  em:"↩"},
-            ].map(btn=>{
-              const on=mode===btn.key;
-              return (
-                <button key={btn.key} onClick={()=>setMode(on?"normal":btn.key)} style={{
-                  padding:"5px 12px",borderRadius:10,cursor:"pointer",
-                  border:`1.5px solid ${on?T.color:"rgba(255,255,255,0.13)"}`,
-                  background:on?`${T.color}22`:"rgba(255,255,255,0.03)",
-                  color:on?T.light:"#64748b",fontSize:12,fontWeight:on?"bold":"normal",
-                  display:"flex",flexDirection:"column",alignItems:"center",gap:1,transition:"all 0.15s",
-                }}>
-                  <span>{btn.em} {btn.label}</span>
-                  <span style={{fontSize:9,opacity:0.6}}>{btn.sub}</span>
-                </button>
-              );
-            })}
-            {mode!=="normal"&&(
-              <div style={{padding:"5px 12px",borderRadius:10,background:`${T.color}18`,border:`1px solid ${T.color}45`,color:T.light,fontSize:10,lineHeight:1.4,textAlign:"center",maxWidth:160}}>
-                {mode==="twoEye"&&"Tap any empty space"}
-                {mode==="oneEye"&&"Tap red-outlined chip"}
-                {mode==="fix"&&"Tap your chip (turn stays)"}
+          {/* ACTION BAR — only Fix Chip remains */}
+          <div style={{display:"flex",gap:10,marginTop:4,flexShrink:0,alignItems:"center",justifyContent:"center"}}>
+            <button onClick={()=>setFixMode(f=>!f)} style={{
+              padding:"5px 16px",borderRadius:10,cursor:"pointer",
+              border:`1.5px solid ${fixMode?T.color:"rgba(255,255,255,0.13)"}`,
+              background:fixMode?`${T.color}22`:"rgba(255,255,255,0.03)",
+              color:fixMode?T.light:"#64748b",
+              fontSize:12,fontWeight:fixMode?"bold":"normal",
+              display:"flex",alignItems:"center",gap:6,transition:"all 0.15s",
+            }}>
+              <span>↩ Fix Chip</span>
+              <span style={{fontSize:9,opacity:0.6}}>{fixMode?"tap your chip to remove":"remove your own chip"}</span>
+            </button>
+            {fixMode&&(
+              <div style={{padding:"5px 12px",borderRadius:10,background:`${T.color}18`,border:`1px solid ${T.color}45`,color:T.light,fontSize:10,lineHeight:1.4}}>
+                Tap your chip to remove it — turn stays yours
               </div>
             )}
           </div>
