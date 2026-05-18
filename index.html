@@ -220,14 +220,13 @@
           </div>
 
           {/* BOARD + RIGHT PANEL */}
-          <div style={{flex:1,display:"flex",flexDirection:"row",gap:4,minHeight:0}}>
+          <div style={{flex:1,display:"flex",flexDirection:"row",gap:4,minHeight:0,justifyContent:"center",alignItems:"stretch"}}>
 
-            {/* BOARD */}
+            {/* BOARD — fills all available height and width, centered */}
             <div style={{
-              flex:"0 0 auto",
-              aspectRatio:"7/5",
-              height:"100%",
-              maxWidth:"calc(100% - 88px)",
+              flex:"1 1 0",
+              minWidth:0,
+              maxWidth:"calc(100% - 76px)",
               display:"grid",
               gridTemplateColumns:"repeat(10,1fr)",
               gridTemplateRows:"repeat(10,1fr)",
@@ -249,14 +248,12 @@
                 const canFix=fixMode&&chip===curTeam&&!lk;
                 const canPlace=!fixMode&&!chip&&!isFree;
 
-                // Background
                 let bg="#faf7ef";
-                if(isFree) bg="#fef9ec";
-                else if(isRoyal&&p.val==="K") bg=isRed ? "#fff8e8" : "#f0f4ff";
-                else if(isRoyal&&p.val==="Q") bg=isRed ? "#fdf0ff" : "#f0fff8";
+                if(isFree) bg="#e8dfc8";
+                else if(isRoyal&&p.val==="K") bg=isRed?"#fff8e8":"#f0f4ff";
+                else if(isRoyal&&p.val==="Q") bg=isRed?"#fdf0ff":"#f0fff8";
                 if(lk&&seqCell) bg=`${TEAMS[seqCell.team].light}70`;
 
-                // Border
                 let bdr="1px solid #ccc5a0";
                 if(isRoyal&&!lk) bdr=`1.5px solid ${isRed?"#d4a017":"#8888cc"}`;
                 if(lk)        bdr="2px solid #f59e0b";
@@ -265,7 +262,9 @@
 
                 const tappable=canPlace||canRemove||canFix;
                 const txtColor=isRed?"#dc2626":"#1e293b";
-                const pipSize="clamp(6px,1.3vmin,12px)";
+                // Larger pips and center suit
+                const pipSize="clamp(8px,1.9vmin,17px)";
+                const suitSize=isRoyal?"clamp(16px,4.0vmin,36px)":"clamp(14px,3.6vmin,32px)";
 
                 return (
                   <div key={`${r}-${c}`} onClick={()=>tap(r,c)} style={{
@@ -278,42 +277,55 @@
                   }}>
 
                     {isFree ? (
-                      <span style={{fontSize:"clamp(9px,2.2vmin,20px)",color:"#b45309",lineHeight:1,transform:"rotate(-90deg)"}}>✦</span>
+                      /* Medallion icon matching the app icon — 4 suits in quadrants */
+                      <svg viewBox="0 0 100 100" style={{width:"90%",height:"90%",overflow:"visible"}}>
+                        <circle cx="50" cy="50" r="47" fill="#f2ead8" stroke="#8b6914" strokeWidth="3"/>
+                        <circle cx="50" cy="50" r="41" fill="none" stroke="#b8930a" strokeWidth="1.5"/>
+                        <circle cx="50" cy="50" r="35" fill="none" stroke="#c8a020" strokeWidth="0.8" opacity="0.5"/>
+                        <line x1="50" y1="10" x2="50" y2="90" stroke="#b8930a" strokeWidth="1.2" opacity="0.5"/>
+                        <line x1="10" y1="50" x2="90" y2="50" stroke="#b8930a" strokeWidth="1.2" opacity="0.5"/>
+                        <text x="29" y="44" fontSize="26" textAnchor="middle" fontFamily="serif" fill="#1e293b" opacity="0.82">♣</text>
+                        <text x="71" y="44" fontSize="26" textAnchor="middle" fontFamily="serif" fill="#1e293b" opacity="0.82">♠</text>
+                        <text x="29" y="74" fontSize="26" textAnchor="middle" fontFamily="serif" fill="#9b1c1c" opacity="0.82">♥</text>
+                        <text x="71" y="74" fontSize="26" textAnchor="middle" fontFamily="serif" fill="#9b1c1c" opacity="0.82">♦</text>
+                        <circle cx="50" cy="50" r="10" fill="#b8930a"/>
+                        <circle cx="50" cy="50" r="7"  fill="#f2ead8"/>
+                        <circle cx="50" cy="50" r="4"  fill="#b8930a"/>
+                      </svg>
                     ) : (
                       <>
-                        {/* Royal watermark — large background chess piece symbol */}
+                        {/* Royal watermark — bigger and darker */}
                         {isRoyal&&(
                           <span style={{
                             position:"absolute",
                             top:"50%",left:"50%",
                             transform:"translate(-50%,-50%) rotate(-90deg)",
-                            fontSize:"clamp(18px,4.5vmin,42px)",
-                            color:isRed?"rgba(180,100,0,0.18)":"rgba(80,80,160,0.18)",
+                            fontSize:"clamp(22px,6vmin,54px)",
+                            color:isRed?"rgba(160,80,0,0.32)":"rgba(60,60,180,0.30)",
                             lineHeight:1,
                             pointerEvents:"none",
                             userSelect:"none",
                           }}>{ROYAL[p.val]}</span>
                         )}
 
-                        {/* Left pip */}
+                        {/* Left pip — bottom player reads tilting left */}
                         <span style={{
-                          position:"absolute",left:2,top:"50%",
+                          position:"absolute",left:3,top:"50%",
                           transform:"translateY(-50%) rotate(-90deg)",
                           fontSize:pipSize,fontWeight:"bold",lineHeight:1,
                           color:txtColor,whiteSpace:"nowrap",zIndex:1,
                         }}>{dv(p.val)}{SYM[p.suit]}</span>
 
-                        {/* Center suit — rotated so top points left */}
+                        {/* Center suit — top points left */}
                         <span style={{
-                          fontSize:isRoyal?"clamp(14px,3.2vmin,28px)":"clamp(12px,2.8vmin,24px)",
-                          lineHeight:1,color:txtColor,
+                          fontSize:suitSize,lineHeight:1,color:txtColor,
                           transform:"rotate(-90deg)",
                           display:"block",zIndex:1,
                         }}>{SYM[p.suit]}</span>
 
-                        {/* Right pip */}
+                        {/* Right pip — top player reads tilting right */}
                         <span style={{
-                          position:"absolute",right:2,top:"50%",
+                          position:"absolute",right:3,top:"50%",
                           transform:"translateY(-50%) rotate(90deg)",
                           fontSize:pipSize,fontWeight:"bold",lineHeight:1,
                           color:txtColor,whiteSpace:"nowrap",zIndex:1,
