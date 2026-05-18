@@ -1,5 +1,70 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="80" fill="#071a0f"/>
-  <text x="256" y="340" font-family="Georgia,serif" font-size="320" font-weight="bold"
-        text-anchor="middle" fill="#f59e0b">S</text>
+  <!-- Dark green app background -->
+  <rect width="512" height="512" rx="90" fill="#071a0f"/>
+
+  <!-- Soft outer glow -->
+  <circle cx="256" cy="256" r="226" fill="#c8a020" opacity="0.15"/>
+
+  <!-- Chip body — ivory/tan -->
+  <circle cx="256" cy="256" r="216" fill="#f2ead8"/>
+
+  <!-- Outer border ring — gold -->
+  <circle cx="256" cy="256" r="216" fill="none" stroke="#8b6914" stroke-width="10"/>
+
+  <!-- Decorative track rings -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#b8930a" stroke-width="3.5"/>
+  <circle cx="256" cy="256" r="192" fill="none" stroke="#d4aa20" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- Slightly warm inner disc -->
+  <circle cx="256" cy="256" r="182" fill="#ede3cc"/>
+
+  <!-- Inner accent ring -->
+  <circle cx="256" cy="256" r="172" fill="none" stroke="#b8930a" stroke-width="2"/>
+
+  <!-- Four curved dividers — arcs not lines, feel more like the chip -->
+  <g stroke="#b8930a" stroke-width="3" fill="none" opacity="0.55">
+    <line x1="256" y1="88"  x2="256" y2="424"/>
+    <line x1="88"  y1="256" x2="424" y2="256"/>
+  </g>
+
+  <!-- Small decorative dots on the ring where dividers meet -->
+  <circle cx="256" cy="90"  r="6" fill="#b8930a"/>
+  <circle cx="256" cy="422" r="6" fill="#b8930a"/>
+  <circle cx="90"  cy="256" r="6" fill="#b8930a"/>
+  <circle cx="422" cy="256" r="6" fill="#b8930a"/>
+
+  <!-- Corner flourish arcs in each quadrant -->
+  <g fill="none" stroke="#b8930a" stroke-width="2" opacity="0.45">
+    <path d="M 148 148 Q 200 120 210 172"/>
+    <path d="M 364 148 Q 312 120 302 172"/>
+    <path d="M 148 364 Q 200 392 210 340"/>
+    <path d="M 364 364 Q 312 392 302 340"/>
+  </g>
+
+  <!-- Suits — black suits in dark charcoal, red suits in warm red -->
+  <!-- Top-left: Clubs (black) -->
+  <text x="172" y="215"
+        font-family="Georgia,serif" font-size="96" text-anchor="middle"
+        fill="#2c2015" opacity="0.88">♣</text>
+
+  <!-- Top-right: Spades (black) -->
+  <text x="340" y="215"
+        font-family="Georgia,serif" font-size="96" text-anchor="middle"
+        fill="#2c2015" opacity="0.88">♠</text>
+
+  <!-- Bottom-left: Hearts (red) -->
+  <text x="172" y="348"
+        font-family="Georgia,serif" font-size="96" text-anchor="middle"
+        fill="#9b1c1c" opacity="0.88">♥</text>
+
+  <!-- Bottom-right: Diamonds (red) -->
+  <text x="340" y="348"
+        font-family="Georgia,serif" font-size="96" text-anchor="middle"
+        fill="#9b1c1c" opacity="0.88">♦</text>
+
+  <!-- Center medallion -->
+  <circle cx="256" cy="256" r="40" fill="#b8930a"/>
+  <circle cx="256" cy="256" r="32" fill="#f2ead8"/>
+  <circle cx="256" cy="256" r="22" fill="#b8930a"/>
+  <circle cx="256" cy="256" r="13" fill="#f2ead8"/>
 </svg>
