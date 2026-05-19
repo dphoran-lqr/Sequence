@@ -186,13 +186,15 @@
       );
 
       // ── GAME ───────────────────────────────────────────────────────────────
-      // Layout: header on top, then flex-row of [board | right panel]
-      // Board fills available height; right panel has Fix Chip button
+      // Header ~44px + padding 9px = ~53px overhead.
+      // Board: height-primary. Width = height × 7/5 (landscape card cells),
+      // capped so it doesn't overflow past the panel.
+      // CSS grid requires BOTH dimensions to be explicit for 1fr rows to work.
       return (
         <div style={{height:"100dvh",background:"#071a0f",display:"flex",flexDirection:"column",padding:"3px 3px 3px",boxSizing:"border-box",fontFamily:"'Georgia',serif",overflow:"hidden",gap:3}}>
 
           {/* HEADER */}
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,flexShrink:0,height:40}}>
             <button onClick={()=>setScreen("setup")} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",color:"#64748b",padding:"4px 10px",borderRadius:8,cursor:"pointer",fontSize:11}}>← Setup</button>
 
             {!winner?(
@@ -219,14 +221,14 @@
             </div>
           </div>
 
-          {/* BOARD + RIGHT PANEL */}
-          <div style={{flex:1,display:"flex",flexDirection:"row",gap:4,minHeight:0,justifyContent:"center",alignItems:"stretch"}}>
+          {/* BOARD ROW — centered, board gets explicit h+w so grid 1fr works */}
+          <div style={{flex:1,display:"flex",flexDirection:"row",gap:6,minHeight:0,alignItems:"center",justifyContent:"center"}}>
 
-            {/* BOARD — fills all available height and width, centered */}
+            {/* BOARD — explicit height from dvh, width derived from 7:5 ratio */}
             <div style={{
-              flex:"1 1 0",
-              minWidth:0,
-              maxWidth:"calc(100% - 76px)",
+              height:"calc(100dvh - 52px)",
+              width:"min(calc((100dvh - 52px) * 1.4), calc(100vw - 80px))",
+              flexShrink:0,
               display:"grid",
               gridTemplateColumns:"repeat(10,1fr)",
               gridTemplateRows:"repeat(10,1fr)",
@@ -262,7 +264,6 @@
 
                 const tappable=canPlace||canRemove||canFix;
                 const txtColor=isRed?"#dc2626":"#1e293b";
-                // Larger pips and center suit
                 const pipSize="clamp(8px,1.9vmin,17px)";
                 const suitSize=isRoyal?"clamp(16px,4.0vmin,36px)":"clamp(14px,3.6vmin,32px)";
 
@@ -277,11 +278,9 @@
                   }}>
 
                     {isFree ? (
-                      /* Medallion icon matching the app icon — 4 suits in quadrants */
-                      <svg viewBox="0 0 100 100" style={{width:"90%",height:"90%",overflow:"visible"}}>
+                      <svg viewBox="0 0 100 100" style={{width:"88%",height:"88%"}}>
                         <circle cx="50" cy="50" r="47" fill="#f2ead8" stroke="#8b6914" strokeWidth="3"/>
                         <circle cx="50" cy="50" r="41" fill="none" stroke="#b8930a" strokeWidth="1.5"/>
-                        <circle cx="50" cy="50" r="35" fill="none" stroke="#c8a020" strokeWidth="0.8" opacity="0.5"/>
                         <line x1="50" y1="10" x2="50" y2="90" stroke="#b8930a" strokeWidth="1.2" opacity="0.5"/>
                         <line x1="10" y1="50" x2="90" y2="50" stroke="#b8930a" strokeWidth="1.2" opacity="0.5"/>
                         <text x="29" y="44" fontSize="26" textAnchor="middle" fontFamily="serif" fill="#1e293b" opacity="0.82">♣</text>
@@ -289,41 +288,30 @@
                         <text x="29" y="74" fontSize="26" textAnchor="middle" fontFamily="serif" fill="#9b1c1c" opacity="0.82">♥</text>
                         <text x="71" y="74" fontSize="26" textAnchor="middle" fontFamily="serif" fill="#9b1c1c" opacity="0.82">♦</text>
                         <circle cx="50" cy="50" r="10" fill="#b8930a"/>
-                        <circle cx="50" cy="50" r="7"  fill="#f2ead8"/>
-                        <circle cx="50" cy="50" r="4"  fill="#b8930a"/>
+                        <circle cx="50" cy="50" r="7" fill="#f2ead8"/>
+                        <circle cx="50" cy="50" r="4" fill="#b8930a"/>
                       </svg>
                     ) : (
                       <>
-                        {/* Royal watermark — bigger and darker */}
                         {isRoyal&&(
                           <span style={{
-                            position:"absolute",
-                            top:"50%",left:"50%",
+                            position:"absolute",top:"50%",left:"50%",
                             transform:"translate(-50%,-50%) rotate(-90deg)",
                             fontSize:"clamp(22px,6vmin,54px)",
                             color:isRed?"rgba(160,80,0,0.32)":"rgba(60,60,180,0.30)",
-                            lineHeight:1,
-                            pointerEvents:"none",
-                            userSelect:"none",
+                            lineHeight:1,pointerEvents:"none",userSelect:"none",
                           }}>{ROYAL[p.val]}</span>
                         )}
-
-                        {/* Left pip — bottom player reads tilting left */}
                         <span style={{
                           position:"absolute",left:3,top:"50%",
                           transform:"translateY(-50%) rotate(-90deg)",
                           fontSize:pipSize,fontWeight:"bold",lineHeight:1,
                           color:txtColor,whiteSpace:"nowrap",zIndex:1,
                         }}>{dv(p.val)}{SYM[p.suit]}</span>
-
-                        {/* Center suit — top points left */}
                         <span style={{
                           fontSize:suitSize,lineHeight:1,color:txtColor,
-                          transform:"rotate(-90deg)",
-                          display:"block",zIndex:1,
+                          transform:"rotate(-90deg)",display:"block",zIndex:1,
                         }}>{SYM[p.suit]}</span>
-
-                        {/* Right pip — top player reads tilting right */}
                         <span style={{
                           position:"absolute",right:3,top:"50%",
                           transform:"translateY(-50%) rotate(90deg)",
@@ -333,13 +321,11 @@
                       </>
                     )}
 
-                    {/* Chip */}
                     {chip&&(
                       <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:2}}>
                         <div style={{
                           height:"82%",aspectRatio:"1/1",borderRadius:"50%",
-                          background:TEAMS[chip].color,
-                          opacity:lk?1:0.88,
+                          background:TEAMS[chip].color,opacity:lk?1:0.88,
                           border:lk?"2.5px solid #f59e0b":"1.5px solid rgba(255,255,255,0.4)",
                           boxShadow:lk?"0 0 0 1.5px #f59e0b,0 2px 10px rgba(0,0,0,0.5)":"0 2px 6px rgba(0,0,0,0.4)",
                           display:"flex",alignItems:"center",justifyContent:"center",
@@ -347,7 +333,6 @@
                         }}>{lk&&"★"}</div>
                       </div>
                     )}
-
                     {canPlace&&(<div style={{position:"absolute",inset:0,background:`${T.color}18`,borderRadius:2,pointerEvents:"none",zIndex:1}}/>)}
                     {canRemove&&(<div style={{position:"absolute",inset:0,background:"rgba(239,68,68,0.15)",borderRadius:2,pointerEvents:"none",zIndex:1}}/>)}
                   </div>

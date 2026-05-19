@@ -1,4 +1,4 @@
-const CACHE = "sequence-v9";
+const CACHE = "sequence-v10";
 const ASSETS = ["./", "./index.html", "./manifest.json"];
 
 self.addEventListener("install", e => {
