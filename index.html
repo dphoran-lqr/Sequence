@@ -186,13 +186,15 @@
       );
 
       // ── GAME ───────────────────────────────────────────────────────────────
-      // No aspect ratio. Board fills everything. Grid 1fr works because both
-      // flex:1 + height:100% give the grid a concrete resolved size.
+      // position:fixed inset:0 guarantees the container is exactly the viewport.
+      // Board gets explicit pixel width/height so CSS grid 1fr resolves correctly.
+      // headerH=50px, padding=3px×2=6px, gap=3px → boardH = 100dvh - 59px
+      // panelW=68px, gap=4px → boardW = 100vw - 6px - 68px - 4px = 100vw - 78px
       return (
-        <div style={{height:"100dvh",width:"100vw",background:"#071a0f",display:"flex",flexDirection:"column",padding:"3px",gap:"3px",boxSizing:"border-box",fontFamily:"'Georgia',serif",overflow:"hidden"}}>
+        <div style={{position:"fixed",inset:0,background:"#071a0f",display:"flex",flexDirection:"column",padding:"3px",gap:"3px",boxSizing:"border-box",fontFamily:"'Georgia',serif",overflow:"hidden"}}>
 
           {/* HEADER */}
-          <div style={{height:44,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between",gap:6}}>
+          <div style={{height:50,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,width:"100%"}}>
             <button onClick={()=>setScreen("setup")} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",color:"#64748b",padding:"4px 10px",borderRadius:8,cursor:"pointer",fontSize:11}}>← Setup</button>
 
             {!winner?(
@@ -219,13 +221,14 @@
             </div>
           </div>
 
-          {/* BODY — board fills all remaining space, fix panel narrow strip on right */}
-          <div style={{flex:1,minHeight:0,display:"flex",flexDirection:"row",gap:4}}>
+          {/* BODY ROW */}
+          <div style={{display:"flex",flexDirection:"row",gap:4,width:"100%",height:"calc(100dvh - 59px)"}}>
 
-            {/* BOARD — flex:1 + height:100% gives grid concrete dimensions */}
+            {/* BOARD — explicit pixel dimensions so grid 1fr rows AND cols both work */}
             <div style={{
-              flex:1,
+              width:"calc(100vw - 78px)",
               height:"100%",
+              flexShrink:0,
               display:"grid",
               gridTemplateColumns:"repeat(10,1fr)",
               gridTemplateRows:"repeat(10,1fr)",
@@ -321,10 +324,12 @@
                     {chip&&(
                       <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:2}}>
                         <div style={{
-                          height:"82%",aspectRatio:"1/1",borderRadius:"50%",
-                          background:TEAMS[chip].color,opacity:lk?1:0.88,
-                          border:lk?"2.5px solid #f59e0b":"1.5px solid rgba(255,255,255,0.4)",
-                          boxShadow:lk?"0 0 0 1.5px #f59e0b,0 2px 10px rgba(0,0,0,0.5)":"0 2px 6px rgba(0,0,0,0.4)",
+                          height:"82%",aspectRatio:"1/1",borderRadius:"26%",
+                          background:TEAMS[chip].color,opacity:lk?1:0.92,
+                          border:lk?"2.5px solid #f59e0b":"2px solid rgba(0,0,0,0.55)",
+                          boxShadow:lk
+                            ?"0 0 0 1.5px #f59e0b, 0 3px 10px rgba(0,0,0,0.6)"
+                            :"inset 0 1px 3px rgba(255,255,255,0.25), 0 3px 8px rgba(0,0,0,0.55)",
                           display:"flex",alignItems:"center",justifyContent:"center",
                           fontSize:"clamp(8px,1.9vmin,18px)",color:"rgba(255,255,255,0.9)",
                         }}>{lk&&"★"}</div>
