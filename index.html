@@ -186,15 +186,13 @@
       );
 
       // ── GAME ───────────────────────────────────────────────────────────────
-      // Header ~44px + padding 9px = ~53px overhead.
-      // Board: height-primary. Width = height × 7/5 (landscape card cells),
-      // capped so it doesn't overflow past the panel.
-      // CSS grid requires BOTH dimensions to be explicit for 1fr rows to work.
+      // No aspect ratio. Board fills everything. Grid 1fr works because both
+      // flex:1 + height:100% give the grid a concrete resolved size.
       return (
-        <div style={{height:"100dvh",background:"#071a0f",display:"flex",flexDirection:"column",padding:"3px 3px 3px",boxSizing:"border-box",fontFamily:"'Georgia',serif",overflow:"hidden",gap:3}}>
+        <div style={{height:"100dvh",width:"100vw",background:"#071a0f",display:"flex",flexDirection:"column",padding:"3px",gap:"3px",boxSizing:"border-box",fontFamily:"'Georgia',serif",overflow:"hidden"}}>
 
           {/* HEADER */}
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,flexShrink:0,height:40}}>
+          <div style={{height:44,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between",gap:6}}>
             <button onClick={()=>setScreen("setup")} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",color:"#64748b",padding:"4px 10px",borderRadius:8,cursor:"pointer",fontSize:11}}>← Setup</button>
 
             {!winner?(
@@ -221,14 +219,13 @@
             </div>
           </div>
 
-          {/* BOARD ROW — centered, board gets explicit h+w so grid 1fr works */}
-          <div style={{flex:1,display:"flex",flexDirection:"row",gap:6,minHeight:0,alignItems:"center",justifyContent:"center"}}>
+          {/* BODY — board fills all remaining space, fix panel narrow strip on right */}
+          <div style={{flex:1,minHeight:0,display:"flex",flexDirection:"row",gap:4}}>
 
-            {/* BOARD — explicit height from dvh, width derived from 7:5 ratio */}
+            {/* BOARD — flex:1 + height:100% gives grid concrete dimensions */}
             <div style={{
-              height:"calc(100dvh - 52px)",
-              width:"min(calc((100dvh - 52px) * 1.4), calc(100vw - 80px))",
-              flexShrink:0,
+              flex:1,
+              height:"100%",
               display:"grid",
               gridTemplateColumns:"repeat(10,1fr)",
               gridTemplateRows:"repeat(10,1fr)",
