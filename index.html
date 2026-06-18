@@ -188,10 +188,10 @@
       // ── GAME ───────────────────────────────────────────────────────────────
       // position:fixed inset:0 guarantees the container is exactly the viewport.
       // Board gets explicit pixel width/height so CSS grid 1fr resolves correctly.
-      // headerH=50px, padding=3px×2=6px, gap=3px → boardH = 100dvh - 59px
+      // headerH=50px, padding=3px×2=6px, gap=3px → boardH = 100vh - 59px
       // panelW=68px, gap=4px → boardW = 100vw - 6px - 68px - 4px = 100vw - 78px
       return (
-        <div style={{position:"fixed",inset:0,background:"#071a0f",display:"flex",flexDirection:"column",padding:"3px",gap:"3px",boxSizing:"border-box",fontFamily:"'Georgia',serif",overflow:"hidden"}}>
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"#071a0f",display:"flex",flexDirection:"column",padding:"3px",gap:"3px",boxSizing:"border-box",fontFamily:"'Georgia',serif",overflow:"hidden"}}>
 
           {/* HEADER */}
           <div style={{height:50,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,width:"100%"}}>
@@ -222,7 +222,7 @@
           </div>
 
           {/* BODY ROW */}
-          <div style={{display:"flex",flexDirection:"row",gap:4,width:"100%",height:"calc(100dvh - 59px)"}}>
+          <div style={{display:"flex",flexDirection:"row",gap:4,width:"100%",height:"calc(100vh - 59px)"}}>
 
             {/* BOARD — explicit pixel dimensions so grid 1fr rows AND cols both work */}
             <div style={{
@@ -383,6 +383,22 @@
                   tap your chip to remove
                 </div>
               )}
+
+              {/* Jack rules reminder */}
+              <div style={{
+                writingMode:"vertical-rl",
+                textOrientation:"mixed",
+                transform:"rotate(180deg)",
+                fontSize:9,
+                color:"rgba(255,255,255,0.28)",
+                textAlign:"center",
+                lineHeight:1.6,
+                letterSpacing:"0.03em",
+                marginTop:16,
+                padding:"0 4px",
+              }}>
+                1-eye jack: remove · 2-eye jack: wild
+              </div>
             </div>
           </div>
         </div>
